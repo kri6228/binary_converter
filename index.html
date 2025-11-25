@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Binary → Decimal Converter</title>
+</head>
+<body>
+    <h2>Binary → Decimal Converter</h2>
+
+    <input id="binInput" placeholder="Enter binary number">
+    <button onclick="convert()">Convert</button>
+
+    <h3 id="output"></h3>
+
+    <!-- MUST BE GLOBAL AND BEFORE converter.js -->
+    <script>
+        var Module = {
+            onRuntimeInitialized: function () {
+                console.log("WASM Loaded!");
+            }
+        };
+
+        function convert() {
+            const bin = document.getElementById("binInput").value;
+
+            const result = Module.ccall(
+                "binaryToDecimal", // C++ fn
+                "number",          // return type
+                ["string"],        // arg types
+                [bin]              // arg values
+            );
+
+            document.getElementById("output").innerText =
+                "Decimal: " + result;
+        }
+    </script>
+
+    <script src="converter.js"></script>
+</body>
+</html>
