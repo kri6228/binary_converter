@@ -7,11 +7,11 @@ body {
 }
 
 .card {
-    background: white;
+    background: #f5d7d7;
     width: 380px;
     padding: 25px;
     border-radius: 14px;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
     text-align: center;
 }
 
@@ -27,6 +27,9 @@ select, input {
     border-radius: 8px;
     border: 1px solid #aaa;
     font-size: 16px;
+}
+input {
+    width: 93%;
 }
 
 button {
