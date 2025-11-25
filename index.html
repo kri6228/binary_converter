@@ -1,39 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Binary → Decimal Converter</title>
+    <meta charset="UTF-8">
+    <title>Universal Number Converter</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h2>Binary → Decimal Converter</h2>
 
-    <input id="binInput" placeholder="Enter binary number">
+<div class="card">
+    <h2>Universal Number Converter (C++ → WebAssembly)</h2>
+
+    <select id="mode">
+        <option value="binToDec">Binary → Decimal</option>
+        <option value="decToBin">Decimal → Binary</option>
+        <option value="binToHex">Binary → Hex</option>
+        <option value="hexToDec">Hex → Decimal</option>
+        <option value="decToHex">Decimal → Hex</option>
+        <option value="octToDec">Octal → Decimal</option>
+        <option value="decToOct">Decimal → Octal</option>
+    </select>
+
+    <input id="inputVal" placeholder="Enter number">
+
     <button onclick="convert()">Convert</button>
 
     <h3 id="output"></h3>
+</div>
 
-    <!-- MUST BE GLOBAL AND BEFORE converter.js -->
-    <script>
-        var Module = {
-            onRuntimeInitialized: function () {
-                console.log("WASM Loaded!");
-            }
-        };
-
-        function convert() {
-            const bin = document.getElementById("binInput").value;
-
-            const result = Module.ccall(
-                "binaryToDecimal", // C++ fn
-                "number",          // return type
-                ["string"],        // arg types
-                [bin]              // arg values
-            );
-
-            document.getElementById("output").innerText =
-                "Decimal: " + result;
+<script>
+    var Module = {
+        onRuntimeInitialized: function () {
+            console.log("WASM Loaded");
         }
-    </script>
+    };
 
-    <script src="converter.js"></script>
+    function convert() {
+        const mode = document.getElementById("mode").value;
+        const inputVal = document.getElementById("inputVal").value;
+        let result;
+
+        if (mode === "binToDec") {
+            result = Module.ccall("binToDec", "number", ["string"], [inputVal]);
+        }
+        else if (mode === "decToBin") {
+            result = Module.ccall("decToBin", "string", ["number"], [Number(inputVal)]);
+        }
+        else if (mode === "binToHex") {
+            result = Module.ccall("binToHex", "string", ["string"], [inputVal]);
+        }
+        else if (mode === "hexToDec") {
+            result = Module.ccall("hexToDec", "number", ["string"], [inputVal]);
+        }
+        else if (mode === "decToHex") {
+            result = Module.ccall("decToHex", "string", ["number"], [Number(inputVal)]);
+        }
+        else if (mode === "octToDec") {
+            result = Module.ccall("octToDec", "number", ["string"], [inputVal]);
+        }
+        else if (mode === "decToOct") {
+            result = Module.ccall("decToOct", "string", ["number"], [Number(inputVal)]);
+        }
+
+        document.getElementById("output").innerText = "Result: " + result;
+    }
+</script>
+
+<script src="converter.js"></script>
+
 </body>
 </html>

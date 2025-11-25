@@ -914,6 +914,75 @@ async function createWasm() {
 
   
 
+  class ExceptionInfo {
+      // excPtr - Thrown object pointer to wrap. Metadata pointer is calculated from it.
+      constructor(excPtr) {
+        this.excPtr = excPtr;
+        this.ptr = excPtr - 24;
+      }
+  
+      set_type(type) {
+        HEAPU32[(((this.ptr)+(4))>>2)] = type;
+      }
+  
+      get_type() {
+        return HEAPU32[(((this.ptr)+(4))>>2)];
+      }
+  
+      set_destructor(destructor) {
+        HEAPU32[(((this.ptr)+(8))>>2)] = destructor;
+      }
+  
+      get_destructor() {
+        return HEAPU32[(((this.ptr)+(8))>>2)];
+      }
+  
+      set_caught(caught) {
+        caught = caught ? 1 : 0;
+        HEAP8[(this.ptr)+(12)] = caught;
+      }
+  
+      get_caught() {
+        return HEAP8[(this.ptr)+(12)] != 0;
+      }
+  
+      set_rethrown(rethrown) {
+        rethrown = rethrown ? 1 : 0;
+        HEAP8[(this.ptr)+(13)] = rethrown;
+      }
+  
+      get_rethrown() {
+        return HEAP8[(this.ptr)+(13)] != 0;
+      }
+  
+      // Initialize native structure fields. Should be called once after allocated.
+      init(type, destructor) {
+        this.set_adjusted_ptr(0);
+        this.set_type(type);
+        this.set_destructor(destructor);
+      }
+  
+      set_adjusted_ptr(adjustedPtr) {
+        HEAPU32[(((this.ptr)+(16))>>2)] = adjustedPtr;
+      }
+  
+      get_adjusted_ptr() {
+        return HEAPU32[(((this.ptr)+(16))>>2)];
+      }
+    }
+  
+  var exceptionLast = 0;
+  
+  var uncaughtExceptionCount = 0;
+  var ___cxa_throw = (ptr, type, destructor) => {
+      var info = new ExceptionInfo(ptr);
+      // Initialize ExceptionInfo content after it was allocated in __cxa_allocate_exception.
+      info.init(type, destructor);
+      exceptionLast = ptr;
+      uncaughtExceptionCount++;
+      assert(false, 'Exception thrown, but exception catching is not enabled. Compile with -sNO_DISABLE_EXCEPTION_CATCHING or -sEXCEPTION_CATCHING_ALLOWED=[..] to catch.');
+    };
+
   var __abort_js = () =>
       abort('native code called abort()');
 
@@ -1390,7 +1459,6 @@ Module['FS_createPreloadedFile'] = FS.createPreloadedFile;
   'makePromise',
   'idsToPromises',
   'makePromiseCallback',
-  'ExceptionInfo',
   'findMatchingCatch',
   'Browser_asyncPrepareDataCounter',
   'isLeapYear',
@@ -1513,6 +1581,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'uncaughtExceptionCount',
   'exceptionLast',
   'exceptionCaught',
+  'ExceptionInfo',
   'Browser',
   'requestFullscreen',
   'requestFullScreen',
@@ -1677,7 +1746,13 @@ function checkIncomingModuleAPI() {
 }
 
 // Imports from the Wasm binary.
-var _binaryToDecimal = Module['_binaryToDecimal'] = makeInvalidEarlyAccess('_binaryToDecimal');
+var _binToDec = Module['_binToDec'] = makeInvalidEarlyAccess('_binToDec');
+var _decToBin = Module['_decToBin'] = makeInvalidEarlyAccess('_decToBin');
+var _binToHex = Module['_binToHex'] = makeInvalidEarlyAccess('_binToHex');
+var _hexToDec = Module['_hexToDec'] = makeInvalidEarlyAccess('_hexToDec');
+var _decToHex = Module['_decToHex'] = makeInvalidEarlyAccess('_decToHex');
+var _octToDec = Module['_octToDec'] = makeInvalidEarlyAccess('_octToDec');
+var _decToOct = Module['_decToOct'] = makeInvalidEarlyAccess('_decToOct');
 var _fflush = makeInvalidEarlyAccess('_fflush');
 var _strerror = makeInvalidEarlyAccess('_strerror');
 var _emscripten_stack_init = makeInvalidEarlyAccess('_emscripten_stack_init');
@@ -1692,7 +1767,13 @@ var __indirect_function_table = makeInvalidEarlyAccess('__indirect_function_tabl
 var wasmMemory = makeInvalidEarlyAccess('wasmMemory');
 
 function assignWasmExports(wasmExports) {
-  assert(typeof wasmExports['binaryToDecimal'] != 'undefined', 'missing Wasm export: binaryToDecimal');
+  assert(typeof wasmExports['binToDec'] != 'undefined', 'missing Wasm export: binToDec');
+  assert(typeof wasmExports['decToBin'] != 'undefined', 'missing Wasm export: decToBin');
+  assert(typeof wasmExports['binToHex'] != 'undefined', 'missing Wasm export: binToHex');
+  assert(typeof wasmExports['hexToDec'] != 'undefined', 'missing Wasm export: hexToDec');
+  assert(typeof wasmExports['decToHex'] != 'undefined', 'missing Wasm export: decToHex');
+  assert(typeof wasmExports['octToDec'] != 'undefined', 'missing Wasm export: octToDec');
+  assert(typeof wasmExports['decToOct'] != 'undefined', 'missing Wasm export: decToOct');
   assert(typeof wasmExports['fflush'] != 'undefined', 'missing Wasm export: fflush');
   assert(typeof wasmExports['strerror'] != 'undefined', 'missing Wasm export: strerror');
   assert(typeof wasmExports['emscripten_stack_init'] != 'undefined', 'missing Wasm export: emscripten_stack_init');
@@ -1704,7 +1785,13 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['emscripten_stack_get_current'] != 'undefined', 'missing Wasm export: emscripten_stack_get_current');
   assert(typeof wasmExports['memory'] != 'undefined', 'missing Wasm export: memory');
   assert(typeof wasmExports['__indirect_function_table'] != 'undefined', 'missing Wasm export: __indirect_function_table');
-  _binaryToDecimal = Module['_binaryToDecimal'] = createExportWrapper('binaryToDecimal', 1);
+  _binToDec = Module['_binToDec'] = createExportWrapper('binToDec', 1);
+  _decToBin = Module['_decToBin'] = createExportWrapper('decToBin', 1);
+  _binToHex = Module['_binToHex'] = createExportWrapper('binToHex', 1);
+  _hexToDec = Module['_hexToDec'] = createExportWrapper('hexToDec', 1);
+  _decToHex = Module['_decToHex'] = createExportWrapper('decToHex', 1);
+  _octToDec = Module['_octToDec'] = createExportWrapper('octToDec', 1);
+  _decToOct = Module['_decToOct'] = createExportWrapper('decToOct', 1);
   _fflush = createExportWrapper('fflush', 1);
   _strerror = createExportWrapper('strerror', 1);
   _emscripten_stack_init = wasmExports['emscripten_stack_init'];
@@ -1719,6 +1806,8 @@ function assignWasmExports(wasmExports) {
 }
 
 var wasmImports = {
+  /** @export */
+  __cxa_throw: ___cxa_throw,
   /** @export */
   _abort_js: __abort_js,
   /** @export */
