@@ -23,7 +23,7 @@
 
 <p align="center">
   <!-- Replace with your screenshot -->
-  <img src="https://via.placeholder.com/800x400?text=Binary+Converter+Preview" width="80%" style="border-radius: 10px;" />
+  <img src="preview.png" width="80%" style="border-radius: 10px;" />
 </p>
 
 <hr/>
